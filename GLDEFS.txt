@@ -1,0 +1,18 @@
+
+material texture models/BEAM.png {
+	brightmap models/BEAM.png
+}
+
+pulselight BluePulseLight
+{
+	color 0 0 0.96
+	size 64    
+	secondarySize 48
+    interval 1.25
+}
+
+// Lit objects
+object TestEmitter
+{
+	Frame TNT1 { light BluePulseLight }
+}
