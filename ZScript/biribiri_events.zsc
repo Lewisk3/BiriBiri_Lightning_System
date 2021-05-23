@@ -1,0 +1,25 @@
+// If you're using this in your own mod
+// feel free to not include this file, as it's only really
+// used to test features.
+
+class LightningTest : EventHandler
+{
+	override void WorldTick()
+	{
+		let plr = players[consoleplayer].mo;
+		UserCmd cmd = plr.player.cmd;
+
+		if(cmd.buttons & BT_USER1)
+		{
+			// Hide PSprite
+			let psp = plr.player.GetPSprite(PSP_WEAPON);
+			psp.y = 200;
+		}
+		
+		if( (cmd.buttons & BT_ALTATTACK) && !(plr.player.oldbuttons & BT_ALTATTACK) )
+		{
+			vector3 spawnpos = (plr.pos.x, plr.pos.y, plr.pos.z+plr.height);
+			plr.Spawn("TestEmitter", spawnpos);
+		}
+	}	
+}

@@ -1,123 +1,32 @@
 version "4.5"
 
-class LightBall : Actor
+
+#include "ZScript/biribiri_base.zsc"
+#include "ZScript/biribiri_events.zsc"
+
+class LightBall : LightningActor
 {
 	Default
 	{
-		Radius 2;
-		+NOINTERACTION;
+		+LightningActor.DOFLASH;
+		LightningActor.FlashTic 5;
+
 		Scale 0.25;
-		RenderStyle "Add";
-		Alpha 1.0;
 		Translation "0:255=@80[4,8,76]";
-	}
-	
-	static void Sparks(Actor from)
-	{
-		double cosa = cos(from.angle);
-		double sina = sin(from.angle);
-		double cosp = cos(from.pitch);
-		double sinp = sin(from.pitch);
-		
-		vector3 pvel = (cosa*cosp,sina*sinp,-sinp) * frandom(-2,2);
-		from.A_SpawnParticle(
-			0xFFFFB8, SPF_FULLBRIGHT, 
-			35, 1, velx: pvel.x, pvel.y, pvel.z,
-			startalphaf: 1.0,
-			fadestepf:0.1
-		);
-	}
-	
-	static void DoLightning(vector3 src_pos, vector2 angles, double dist, double boltlen, double strength = 2.0, double biribiri = 2.0)
-	{
-		vector2 view = (0, 0);
-		double astr = strength;
-		double pstr = astr;
-		view.x = frandom(-astr, astr);
-		view.y = frandom(-pstr, pstr);
-		
-		LightBall prev;
-		double boltalpha = frandom(0.08, 1.0);
-		for(double len = 0; len < dist; len+=boltlen)
-		{	
-			double a = view.x+angles.x;
-			double p = view.y+angles.y;
-			vector3 dir = ( cos(a)*cos(p), sin(a)*cos(p), -sin(p) );
-			
-			double fstr = (len/dist);
-			
-			view.x += frandom[LightningAngle](-astr,pstr) * fstr;
-			view.y += frandom[LightningPitch](-pstr,pstr) * fstr;
-			
-			vector3 spawnpos;
-			if(!prev) 
-				spawnpos = level.vec3offset(src_pos, dir);
-			else
-				spawnpos = level.vec3offset(prev.pos, dir*boltlen);
-			
-			let biri = LightBall(Actor.Spawn("LightBall", spawnpos));
-			if(biri)
-			{
-				biri.angle = a;
-				biri.pitch = p - 90;
-				biri.alpha = boltalpha;
-				biri.bInvisible = random(0,1);
-				Sparks(biri);
-			}
-			
-			// Connect 2 biris
-			if(prev && biri)
-			{
-				vector3 tobiri = level.SphericalCoords(biri.pos, prev.pos, (biri.angle, biri.pitch+90));
-				biri.angle -= tobiri.x;
-				biri.pitch -= tobiri.y;
-				biri.pitch += frandom[LightningPitch](-pstr,pstr) * frandom(1.0,biribiri);
-				
-				// Scale to correct size.
-				double scalequanta = (boltlen*biri.scale.x);
-				double newscale = biri.scale.x * (tobiri.z / scalequanta);
-				biri.Scale.Y = newscale;
-				
-			}
-			prev = biri;
-		}
-	}
-	
-	override void Tick()
-	{
-		if (alpha < 0)
-		{
-			destroy();
-			return;
-		}
-		if (isFrozen()) return;
-		
-		//animation:
-		if (tics != -1) 
-		{
-			if(tics > 0) tics--;
-			while (!tics) 
-				if(!SetState(CurState.NextState)) return;
-		}
 	}
 	
 	States
 	{
 		Spawn:
-			BEAM A 1 
-			{	
-				if(!(level.time%15)) bInvisible = !bInvisible;
-				A_FadeOut(0.035);
-			}
+			BEAM A 1 A_FadeOut(0.035);
 		wait;
 	}
 }
-
-
 class TestEmitter : Actor
 {
 	Default
 	{
+		Scale 0.25;
 		+NOINTERACTION;
 	}
 	
@@ -128,76 +37,9 @@ class TestEmitter : Actor
 			{
 				for(int i = 0; i < 360; i+=45)
 				{
-					LightBall.DoLightning(pos, (angle+frandom(0,360)+i,pitch+frandom(-90,90)), 200, 1.0, 20.);
+					BiriBiri.DoLightning(pos, (angle+frandom(0,360)+i,pitch+frandom(-90,90)), dist:200, 0.75, 10.0, 3.0);
 				}
 			}
 		loop;
 	}
 }
-
-class LightningTest : EventHandler
-{
-	override void WorldTick()
-	{
-		let plr = players[consoleplayer].mo;
-		UserCmd cmd = plr.player.cmd;
-		uint btns = cmd.buttons;
-		uint oldbtns = plr.player.oldbuttons;
-		if( (btns & BT_ALTATTACK) && !(oldbtns & BT_ALTATTACK) )
-		{
-			double dist = 200.;
-			double amax = 45;
-			for(int ya = -90; ya < 90; ya += 5)
-			{
-				for(int ca = -amax; ca < amax; ca += 5)
-				{
-					double curdist = dist - (ya/180);
-					double a = 180 + (plr.angle + ca) + ya;
-					double p = plr.pitch + 90 * (ca/amax);				
-					vector3 dir = (cos(a)*cos(p), sin(a)*cos(p), -sin(p));
-					dir.xy *= -curdist;
-					dir.z *= curdist;
-					vector3 spawnpos = level.vec3offset(plr.pos, dir);
-					LightBall.DoLightning(spawnpos, (a,p), 100, 1.0, 20.0, 0);
-				}
-			}
-		}
-	}	
-}
-
-
-	/*
-	if(!src) 
-	{
-		vector3 spawnpos = level.vec3offset(src_pos, dir * len);
-		let biri = LightBall(Actor.Spawn("LightBall", spawnpos));
-		src = biri;
-		continue;
-	}
-	
-	vector3 offs = dir*len;
-	src.A_SpawnParticle(0x0ad2f5, SPF_FULLBRIGHT, 8, 2, xoff:offs.x, yoff:offs.y, zoff:offs.z, fadestepf:0.035);
-	*/
-	
-	/*
-	if(biri)
-	{
-		biri.angle = a;
-		biri.pitch = p - 90;
-	}
-	
-	// Connect 2 biris
-	if(prev && biri)
-	{
-		vector3 tobiri = level.SphericalCoords(biri.pos, prev.pos, (biri.angle, biri.pitch+90));
-		biri.angle -= tobiri.x;
-		biri.pitch -= tobiri.y;
-		
-		// Scale to correct size.
-		double scalequanta = (double(biri.radius)*biri.scale.x);
-		double newscale = biri.scale.x * (tobiri.z / scalequanta);
-		biri.Scale.Y = newscale;
-		
-	}
-	prev = biri;
-	*/
