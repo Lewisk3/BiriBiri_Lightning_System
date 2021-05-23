@@ -1,2 +1,2 @@
 # BiriBiri_Lightning_System
- Lightning effect API for GZDoom.
+ Lightning effect API for GZDoom. (Heavy WIP)
