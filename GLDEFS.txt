@@ -6,9 +6,15 @@ material texture models/BEAM.png {
 pulselight BluePulseLight
 {
 	color 0 0 0.96
-	size 64    
-	secondarySize 48
-    interval 1.25
+	size 96    
+	secondarySize 32
+    interval 0.05
+}
+
+pointlight BlueBrightLight
+{
+    color 0.0 0.0 1.0
+    size 8
 }
 
 // Lit objects

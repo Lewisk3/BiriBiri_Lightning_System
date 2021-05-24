@@ -16,7 +16,7 @@ class BiriBiri : Actor abstract
 		return (cos(a)*cos(p), sin(a)*cos(p), -sin(p));
 	}
 	
-	static void DoLightning(vector3 pos, vector2 angles, class<LightningActor> type = "LightBall", double dist = 200, double stepsize = 1.0, double strength = 2.0, double sharpness = 2.0)
+	static void DoLightning(vector3 pos, vector2 angles, class<LightningActor> type = "LightBall", double dist = 200, double stepsize = 1.0, double strength = 2.0, double sharpness = 2.0, double branchchance = 80)
 	{
 		// Initialize
 		LightningActor prev;
@@ -60,12 +60,18 @@ class BiriBiri : Actor abstract
 				
 				// Update Lightning direction.
 				biri.pitch += frandom[LightningPitch](-str,str) * frandom(0,sharpness);
-				biri.pitch += frandom[LightningAngle](-str,str);
 				
 				// Adjust scale so that current connects to previous' position.
 				double scalequanta = (stepsize*biri.scale.x);
 				double newscale = biri.scale.x * (tobiri.z / scalequanta);
 				biri.Scale.Y = newscale;
+				
+				// Random change to branch into smaller bolt
+				if( branchchance && (random(0,branchchance) == branchchance) && (len/dist) >= 0.5)				
+				{
+					vector2 newangs = (biri.angle + frandom(-45,45), biri.pitch + frandom(-30,30));
+					DoLightning(biri.pos, newangs, type, dist*0.25, stepsize, strength, sharpness*2.0, 0);
+				}
 				
 			}
 			prev = biri;
