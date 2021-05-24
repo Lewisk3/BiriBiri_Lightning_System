@@ -99,7 +99,7 @@ class LightBall : LightningActor
 		-LightningActor.DOFLASH;
 		LightningActor.FlashTic 10;
 
-		Scale 0.25;
+		Scale 0.05;
 		Translation "0:255=@80[4,8,76]";
 	}
 	
@@ -135,7 +135,7 @@ class TestEmitter : Actor
 					if(random(0,3)==3)
 					{
 						vector2 angles = (angle+i+frandom(0,360),pitch+frandom(-90,90));
-						BiriBiri.DoLightning(pos, angles, dist:200, 1.0, 10.0, 2.0, 20);
+						BiriBiri.DoLightning(pos, angles, dist:200, 1.0, 20.0, 30.0, 15);
 						if(random(0,3) == 3)
 						{
 							for(int s = 0; s < 40; s++)
